@@ -83,9 +83,24 @@ def test_messages(client):
 
 def test_delete_message(client):
     """Ensure the messages are being deleted"""
-    rv = client.get('/delete/1')
+    rv = client.get("/delete/1")
+    data = json.loads(rv.data)
+    assert data["status"] == 0
+    login(client, app.config["USERNAME"], app.config["PASSWORD"])
+    rv = client.get("/delete/1")
     data = json.loads(rv.data)
     assert data["status"] == 1
+
+
+def test_delete_requires_login(client):
+    """Ensure logged-out users get a 401 and the post is kept"""
+    login(client, app.config["USERNAME"], app.config["PASSWORD"])
+    client.post("/add", data=dict(title="Keep me", text="still here"))
+    logout(client)
+    rv = client.get("/delete/1")
+    assert rv.status_code == 401
+    assert json.loads(rv.data) == {"status": 0, "message": "Please log in."}
+    assert b"Keep me" in client.get("/").data
 
 
 def test_search_page(client):
