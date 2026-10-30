@@ -86,3 +86,22 @@ def test_delete_message(client):
     rv = client.get('/delete/1')
     data = json.loads(rv.data)
     assert data["status"] == 1
+
+
+def test_search_page(client):
+    """Ensure the search page loads without a query"""
+    rv = client.get("/search/")
+    assert rv.status_code == 200
+    assert b"Search:" in rv.data
+
+
+def test_search_results(client):
+    """Ensure search matches title or text, case-insensitively"""
+    login(client, app.config["USERNAME"], app.config["PASSWORD"])
+    client.post("/add", data=dict(title="Flask Tips", text="routing"))
+    client.post("/add", data=dict(title="Cooking", text="pasta recipe"))
+    client.post("/add", data=dict(title="Misc", text="more FLASK things"))
+    rv = client.get("/search/?query=flask")
+    assert b"Flask Tips" in rv.data
+    assert b"more FLASK things" in rv.data
+    assert b"Cooking" not in rv.data
