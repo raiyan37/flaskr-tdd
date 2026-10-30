@@ -3,9 +3,13 @@ import json
 import pytest
 from pathlib import Path
 
-from project.app import app, db
-
 TEST_DB = "test.db"
+
+# Flask-SQLAlchemy 3.x binds the engine when the app is imported, so the
+# test database must be chosen before the import (not inside the fixture).
+os.environ["DATABASE_URL"] = f"sqlite:///{Path(__file__).resolve().parent.parent.joinpath(TEST_DB)}"
+
+from project.app import app, db
 
 
 @pytest.fixture
